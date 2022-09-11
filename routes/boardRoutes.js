@@ -126,7 +126,7 @@ res.status(200).send({ msg: "board Updated" })
 
 //! Edit Board Info (rename, add description, edit description)"/board/edit"
 router.post("/edit", async (req, res) => {
-    const { title, desc } = req.body;
+    const { title, desc, boardId } = req.body;
     let updatedBoard = "";
     if (title) {
         updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { { title: title } })

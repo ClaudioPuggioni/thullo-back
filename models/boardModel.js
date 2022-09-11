@@ -9,8 +9,6 @@ const boardSchema = new mongoose.Schema(
     },
     desc: {
       type: String,
-      required: true,
-
     },
     admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     lists: [{ type: mongoose.Schema.Types.ObjectId, ref: "List" }],

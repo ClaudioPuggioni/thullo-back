@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const BoardModel = require("../models/boardModel");
+const { create } = require("../models/cardModel");
 const ListModel = require("../models/listModel");
 
 //! List All Boards "/board/listall"
@@ -17,6 +18,7 @@ router.post("/create", async (req, res) => {
   const newBoard = new BoardModel({
     title: title,
     admin: userId,
+    members: userId,
   });
 
   try {
@@ -58,6 +60,8 @@ router.post("/addlist", async (req, res) => {
   try {
     const createdList = await newList.save();
     foundBoard.lists.push(createdList._id);
+
+    console.log("NEWLYCREATED-LIST:", createdList);
 
     try {
       foundBoard.save();
@@ -105,24 +109,14 @@ router.post("/visibility", async (req, res) => {
   const { boardId, userId } = req.body;
   if ((!boardId, !userId)) return res.status(400).send("Required fields missing");
 
+  const foundBoard = await BoardModel.findById(boardId);
+
+  if (!foundBoard) return res.status(400).send("Board not found");
+
+  foundBoard.active = foundBoard.active ? false : true;
+
   try {
-    let updatedBoard = await BoardModel.findOneAndUpdate(
-      { _id: boardId },
-      {
-        $set: {
-          active: {
-            $cond: {
-              if: {
-                $eq: true,
-              },
-              then: false,
-              else: true,
-            },
-          },
-        },
-      }
-    );
-    console.log("UPDATED VISIBILITY:", updatedBoard);
+    const savedBoard = await foundBoard.save();
     return res.status(200).send("Board visibility updated successfully");
   } catch (err) {
     return res.status(501).send(err.message);
@@ -142,8 +136,8 @@ router.post("/edit", async (req, res) => {
   if (desc) foundBoard.desc = desc;
 
   try {
-    const updatedBoard = await foundBoard.save();
-    return res.status(200).send(updatedBoard);
+    const savedBoard = await foundBoard.save();
+    return res.status(200).send(savedBoard);
   } catch (err) {
     return res.status(501).send(err.message);
   }

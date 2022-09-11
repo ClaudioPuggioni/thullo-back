@@ -14,11 +14,6 @@ const cardSchema = new mongoose.Schema(
       ref: "List",
       required: true,
     },
-    admin: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
     board: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Board",
@@ -29,9 +24,11 @@ const cardSchema = new mongoose.Schema(
         type: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       },
     ],
-    labels: {
-      type: String,
-    },
+    labels: [
+      {
+        type: String,
+      },
+    ],
     comments: [
       {
         type: String,

@@ -34,8 +34,10 @@ mongoose
 app.use(express.json());
 app.use(morgan("dev"));
 app.use("/auth", authRouter);
-app.use("/board", authenticateRequest, boardRouter);
-app.use("/card", authenticateRequest, cardRouter);
+app.use("/board", boardRouter);
+app.use("/card", cardRouter);
+// app.use("/board", authenticateRequest, boardRouter);
+// app.use("/card", authenticateRequest, cardRouter);
 
 app.listen(8000, () => {
   console.log("Connected");

@@ -1,12 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const BoardModel = require("../models/boardModel");
-const { create } = require("../models/cardModel");
 const ListModel = require("../models/listModel");
 
 //! List All Boards "/board/listall"
 router.get("/listall", async (req, res) => {
-  const allBoards = await BoardModel.find();
+  const allBoards = await BoardModel.find().populate({ path: "lists", populate: { path: "cards" } });
   return res.status(200).send(allBoards);
 });
 
@@ -49,8 +48,8 @@ router.post("/addlist", async (req, res) => {
   if (!boardId || !userId || !title) return res.status(400).send("Required fields missing");
 
   let foundBoard = await BoardModel.findById(boardId);
-
   if (!foundBoard) return res.status(400).send("Board does not exist");
+  if (!foundBoard.members.includes(userId)) return res.status(401).send("Current user is not board member");
 
   const newList = new ListModel({
     title: title,
@@ -78,12 +77,16 @@ router.post("/addlist", async (req, res) => {
 //! Add Member to Board "/board/add"
 // **make a member and add the id to board
 router.post("/member/add", async (req, res) => {
-  const { memberId, boardId } = req.body;
-  if (!memberId || !boardId) return res.status(400).send("Required fields missing");
+  const { userId, memberId, boardId } = req.body;
+  if (!userId || !memberId || !boardId) return res.status(400).send("Required fields missing");
+
+  const foundBoard = await BoardModel.findById(boardId);
+  if (!foundBoard) return res.status(400).send("Board not found");
+  if (foundBoard.admin.toString() !== userId) return res.status(401).send("Current user is not admin");
 
   try {
-    const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $addToSet: { members: memberId } }, { returnDocument: "after" });
-    return res.status(200).send("List member added successfully");
+    const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $addToSet: { members: memberId } });
+    return res.status(200).send("Member added successfully to board");
   } catch (err) {
     return res.status(501).send(err.message);
   }
@@ -92,8 +95,12 @@ router.post("/member/add", async (req, res) => {
 //! Remove Member from Board (only if admin) "/board/member/del"
 //* get board id admin id and member to delete
 router.post("/member/del", async (req, res) => {
-  const { boardId, memberId } = req.body;
-  if (!boardId || !memberId) return res.status(400).send("Required fields missing");
+  const { userId, memberId, boardId } = req.body;
+  if (!userId || !memberId || !boardId) return res.status(400).send("Required fields missing");
+
+  const foundBoard = await BoardModel.findById(boardId);
+  if (!foundBoard) return res.status(400).send("Board not found");
+  if (foundBoard.admin.toString() !== userId) return res.status(401).send("Current user is not admin");
 
   try {
     const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $pull: { members: memberId } });
@@ -110,8 +117,8 @@ router.post("/visibility", async (req, res) => {
   if ((!boardId, !userId)) return res.status(400).send("Required fields missing");
 
   const foundBoard = await BoardModel.findById(boardId);
-
   if (!foundBoard) return res.status(400).send("Board not found");
+  if (foundBoard.admin.toString() !== userId) return res.status(401).send("Current user is not admin");
 
   foundBoard.active = foundBoard.active ? false : true;
 
@@ -125,19 +132,19 @@ router.post("/visibility", async (req, res) => {
 
 //! Edit Board Info (rename, add description, edit description)"/board/edit"
 router.post("/edit", async (req, res) => {
-  const { title, desc, boardId } = req.body;
+  const { title, desc, boardId, userId } = req.body;
   if (!boardId) return res.status(400).send("Required field missing");
 
   const foundBoard = await BoardModel.findById(boardId);
-
   if (!foundBoard) return res.status(400).send("Board not found");
+  if (foundBoard.admin.toString() !== userId) return res.status(401).send("Current user is not admin");
 
   if (title) foundBoard.title = title;
   if (desc) foundBoard.desc = desc;
 
   try {
     const savedBoard = await foundBoard.save();
-    return res.status(200).send(savedBoard);
+    return res.status(200).send("Board info updated successfully");
   } catch (err) {
     return res.status(501).send(err.message);
   }

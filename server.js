@@ -5,6 +5,11 @@ const cors = require("cors");
 
 const app = express();
 
+// Middleware
+app.use(express.static("public"));
+app.use(express.json());
+app.use(morgan("dev"));
+
 // Enable Cors
 const corsOptions = {
   origin: "*",
@@ -31,8 +36,7 @@ mongoose
   })
   .catch((err) => console.log("could not connect ", err));
 
-app.use(express.json());
-app.use(morgan("dev"));
+// Connect Routes
 app.use("/auth", authRouter);
 app.use("/board", boardRouter);
 app.use("/card", cardRouter);

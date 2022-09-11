@@ -34,10 +34,6 @@ const cardSchema = new mongoose.Schema(
         type: String,
       },
     ],
-    active: {
-      type: Boolean,
-      default: true,
-    },
     fileUrls: [
       {
         type: String,

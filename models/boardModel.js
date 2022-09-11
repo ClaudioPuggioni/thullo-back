@@ -7,8 +7,14 @@ const boardSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    desc: {
+      type: String,
+      required: true,
+
+    },
     admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     lists: [{ type: mongoose.Schema.Types.ObjectId, ref: "List" }],
+    members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     active: {
       type: Boolean,
       default: true,

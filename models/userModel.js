@@ -16,9 +16,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    admin: {
-      type: Boolean,
-    },
+
     addedCards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Card" }],
     assignedCards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Card" }],
   },

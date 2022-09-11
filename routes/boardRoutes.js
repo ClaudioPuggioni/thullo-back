@@ -75,7 +75,7 @@ router.post("/addlist", async (req, res) => {
 // **make a member and add the id to board
 router.post("/member/add", async (req, res) => {
   const { memberId, boardId } = req.body;
-  if (!memberId || !boardId) return res.status(400).send({ msg: "Required fields missing" });
+  if (!memberId || !boardId) return res.status(400).send("Required fields missing");
 
   try {
     const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $addToSet: { members: memberId } }, { returnDocument: "after" });
@@ -89,7 +89,7 @@ router.post("/member/add", async (req, res) => {
 //* get board id admin id and member to delete
 router.post("/member/del", async (req, res) => {
   const { boardId, memberId } = req.body;
-  if (!boardId || !memberId) return res.status(400).send({ msg: "Required fields missing" });
+  if (!boardId || !memberId) return res.status(400).send("Required fields missing");
 
   try {
     const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $pull: { members: memberId } });
@@ -122,7 +122,8 @@ router.post("/visibility", async (req, res) => {
         },
       }
     );
-    return res.status(200).send({ msg: "board Updated" });
+    console.log("UPDATED VISIBILITY:", updatedBoard);
+    return res.status(200).send("Board visibility updated successfully");
   } catch (err) {
     return res.status(501).send(err.message);
   }

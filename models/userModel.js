@@ -16,9 +16,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
-    addedCards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Card" }],
-    assignedCards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Card" }],
   },
 
   { timestamps: true }

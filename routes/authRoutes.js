@@ -38,6 +38,9 @@ router.post("/signup", async (req, res) => {
     const savedUser = await newUser.save();
     console.log("SIGNUP/savedUser:", savedUser);
 
+    const editedUser = savedUser.toJSON();
+    delete editedUser.password;
+
     const payload = {
       id: savedUser._id,
       email: savedUser.email,
@@ -47,7 +50,7 @@ router.post("/signup", async (req, res) => {
 
     return res.status(201).send({
       msg: "User created successfully",
-      user: savedUser,
+      user: editedUser,
       refreshToken: refreshToken,
       accessToken: accessToken,
     });

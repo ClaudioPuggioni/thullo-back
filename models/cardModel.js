@@ -21,7 +21,8 @@ const cardSchema = new mongoose.Schema(
     },
     assignedTo: [
       {
-        type: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
     ],
     labels: [
@@ -31,7 +32,8 @@ const cardSchema = new mongoose.Schema(
     ],
     comments: [
       {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
       },
     ],
     fileUrls: [

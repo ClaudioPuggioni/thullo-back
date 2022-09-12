@@ -34,7 +34,7 @@ router.post("/create", async (req, res) => {
 router.get("/:id", async (req, res) => {
   let boardId = req.params.id;
 
-  let foundBoard = await BoardModel.findOne({ _id: boardId });
+  let foundBoard = await BoardModel.findOne({ _id: boardId }).populate({ path: "lists", populate: { path: "cards", model: "Card" } });
 
   if (!foundBoard) return res.status(400).send("Board does not exist");
 

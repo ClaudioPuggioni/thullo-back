@@ -13,6 +13,7 @@ const boardSchema = new mongoose.Schema(
     admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     lists: [{ type: mongoose.Schema.Types.ObjectId, ref: "List" }],
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    background: { type: String, type: Object },
     active: {
       type: Boolean,
       default: true,

@@ -2,22 +2,39 @@ const express = require("express");
 const router = express.Router();
 const BoardModel = require("../models/boardModel");
 const ListModel = require("../models/listModel");
+const multer = require("multer");
+const UserModel = require("../models/userModel");
 
-//! List All Boards "/board/listall"
-router.get("/listall", async (req, res) => {
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
+
+//! List All Boards "/board/"
+router.get("/", async (req, res) => {
   const allBoards = await BoardModel.find().populate({ path: "lists", populate: { path: "cards" } });
   return res.status(200).send(allBoards);
 });
 
 //! Create New Board "/board/create"
 router.post("/create", async (req, res) => {
-  const { title, userId } = req.body;
+  const { title, userId, background } = req.body;
   if (!title || !userId) return res.status(400).send("Required fields missing");
+
+  const foundUser = UserModel.findOne({ _id: userId });
+  if (!foundUser) return res.status(400).send("User not found");
 
   const newBoard = new BoardModel({
     title: title,
     admin: userId,
     members: userId,
+    background,
   });
 
   try {

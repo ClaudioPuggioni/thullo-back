@@ -108,8 +108,8 @@ router.post("/member/add", async (req, res) => {
   const foundUser = memberUsername
     ? await UserModel.findOne({ username: memberUsername })
     : memberEmail
-      ? await UserModel.findOne({ email: memberEmail })
-      : null;
+    ? await UserModel.findOne({ email: memberEmail })
+    : null;
   if (!foundUser) return res.status(404).send("User not found");
 
   let isMember;
@@ -140,8 +140,8 @@ router.post("/member/del", async (req, res) => {
   const foundUser = memberUsername
     ? await UserModel.findOne({ username: memberUsername })
     : memberEmail
-      ? await UserModel.findOne({ email: memberEmail })
-      : null;
+    ? await UserModel.findOne({ email: memberEmail })
+    : null;
   if (!foundUser) return res.status(400).send("User not found");
   if (foundUser._id.toString() === userId) return res.status(400).send("Cannot remove admin");
 

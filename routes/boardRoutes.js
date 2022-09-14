@@ -63,6 +63,7 @@ router.get("/:id", async (req, res) => {
 //! Create New List in Board "/board/addlist"
 // ** get a boardid and adminid  in body make a list and add the id to board
 router.post("/addlist", async (req, res) => {
+  console.log(req.body);
   const { boardId, userId, title } = req.body;
   if (!boardId || !userId || !title) return res.status(400).send("Required fields missing");
 
@@ -107,8 +108,8 @@ router.post("/member/add", async (req, res) => {
   const foundUser = memberUsername
     ? await UserModel.findOne({ username: memberUsername })
     : memberEmail
-    ? await UserModel.findOne({ email: memberEmail })
-    : null;
+      ? await UserModel.findOne({ email: memberEmail })
+      : null;
   if (!foundUser) return res.status(404).send("User not found");
 
   let isMember;
@@ -138,8 +139,8 @@ router.post("/member/del", async (req, res) => {
   const foundUser = memberUsername
     ? await UserModel.findOne({ username: memberUsername })
     : memberEmail
-    ? await UserModel.findOne({ email: memberEmail })
-    : null;
+      ? await UserModel.findOne({ email: memberEmail })
+      : null;
   if (!foundUser) return res.status(400).send("User not found");
 
   let isMember;

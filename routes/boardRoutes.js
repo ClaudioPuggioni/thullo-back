@@ -51,7 +51,9 @@ router.post("/create", async (req, res) => {
 router.get("/:id", async (req, res) => {
   let boardId = req.params.id;
 
-  let foundBoard = await BoardModel.findOne({ _id: boardId }).populate({ path: "lists", populate: { path: "cards", model: "Card" } });
+  let foundBoard = await BoardModel.findOne({ _id: boardId })
+    .populate({ path: "lists", populate: { path: "cards", model: "Card" } })
+    .populate("members");
 
   if (!foundBoard) return res.status(400).send("Board does not exist");
 
@@ -94,15 +96,22 @@ router.post("/addlist", async (req, res) => {
 //! Add Member to Board "/board/add"
 // **make a member and add the id to board
 router.post("/member/add", async (req, res) => {
-  const { userId, memberId, boardId } = req.body;
-  if (!userId || !memberId || !boardId) return res.status(400).send("Required fields missing");
+  const { userId, memberUsername, memberEmail, boardId } = req.body;
+  if (!userId || (!memberUsername && !memberEmail) || !boardId) return res.status(400).send("Required fields missing");
 
   const foundBoard = await BoardModel.findById(boardId);
   if (!foundBoard) return res.status(400).send("Board not found");
   if (foundBoard.admin.toString() !== userId) return res.status(401).send("Current user is not admin");
 
+  const foundUser = memberUsername
+    ? await UserModel.findOne({ username: memberUsername })
+    : memberEmail
+    ? await UserModel.findOne({ email: memberEmail })
+    : null;
+  if (!foundUser) return res.status(400).send("User not found");
+
   try {
-    const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $addToSet: { members: memberId } });
+    const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $addToSet: { members: foundUser._id } });
     return res.status(200).send("Member added successfully to board");
   } catch (err) {
     return res.status(501).send(err.message);
@@ -112,15 +121,22 @@ router.post("/member/add", async (req, res) => {
 //! Remove Member from Board (only if admin) "/board/member/del"
 //* get board id admin id and member to delete
 router.post("/member/del", async (req, res) => {
-  const { userId, memberId, boardId } = req.body;
-  if (!userId || !memberId || !boardId) return res.status(400).send("Required fields missing");
+  const { userId, memberUsername, memberEmail, boardId } = req.body;
+  if (!userId || (!memberUsername && !memberEmail) || !boardId) return res.status(400).send("Required fields missing");
 
   const foundBoard = await BoardModel.findById(boardId);
   if (!foundBoard) return res.status(400).send("Board not found");
   if (foundBoard.admin.toString() !== userId) return res.status(401).send("Current user is not admin");
 
+  const foundUser = memberUsername
+    ? await UserModel.findOne({ username: memberUsername })
+    : memberEmail
+    ? await UserModel.findOne({ email: memberEmail })
+    : null;
+  if (!foundUser) return res.status(400).send("User not found");
+
   try {
-    const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $pull: { members: memberId } });
+    const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $pull: { members: foundUser._id } });
     return res.status(200).send("Member removed successfully");
   } catch (err) {
     return res.status(501).send(err.message);
@@ -130,17 +146,18 @@ router.post("/member/del", async (req, res) => {
 //! Toggle Visibility of Board "/board/visibility"
 //** */ Get the board and admin id check admin and  toggle the boolean
 router.post("/visibility", async (req, res) => {
-  const { boardId, userId } = req.body;
-  if ((!boardId, !userId)) return res.status(400).send("Required fields missing");
+  const { boardId, userId, bool } = req.body;
+  if ((!boardId, !userId, !bool)) return res.status(400).send("Required fields missing");
 
   const foundBoard = await BoardModel.findById(boardId);
   if (!foundBoard) return res.status(400).send("Board not found");
   if (foundBoard.admin.toString() !== userId) return res.status(401).send("Current user is not admin");
 
-  foundBoard.active = foundBoard.active ? false : true;
+  // foundBoard.active = foundBoard.active ? false : true;
 
   try {
-    const savedBoard = await foundBoard.save();
+    // const savedBoard = await foundBoard.save();
+    const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { active: bool });
     return res.status(200).send("Board visibility updated successfully");
   } catch (err) {
     return res.status(501).send(err.message);

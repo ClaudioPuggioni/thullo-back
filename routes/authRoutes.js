@@ -96,7 +96,7 @@ router.post("/login", async (req, res) => {
 });
 
 router.post("/token", async (req, res) => {
-  const { email } = req.body;
+  const email = req.body.email;
   const refresh_token = req.body.refreshToken;
   if (!refresh_token) return res.status(401).send("Please provide refresh token");
 
@@ -119,7 +119,7 @@ router.post("/token", async (req, res) => {
 
     return res.status(200).json({ accessToken, refreshToken });
   } catch (err) {
-    return res.status(401).send(err.message);
+    return res.status(501).send(err.message);
   }
 });
 

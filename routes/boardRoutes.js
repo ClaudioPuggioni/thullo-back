@@ -53,7 +53,7 @@ router.get("/:id", async (req, res) => {
 
   let foundBoard = await BoardModel.findOne({ _id: boardId })
     .populate({ path: "lists", populate: { path: "cards", model: "Card" } })
-    .populate("members");
+    .populate({ path: "members", select: "boards email username __v _id createdAt updatedAt" });
 
   if (!foundBoard) return res.status(400).send("Board does not exist");
 
@@ -68,7 +68,7 @@ router.post("/addlist", async (req, res) => {
 
   let foundBoard = await BoardModel.findById(boardId);
   if (!foundBoard) return res.status(400).send("Board does not exist");
-  if (!foundBoard.members.includes(userId)) return res.status(401).send("Current user is not board member");
+  if (!foundBoard.members.includes(userId)) return res.status(404).send("Current user is not board member");
 
   const newList = new ListModel({
     title: title,
@@ -97,18 +97,25 @@ router.post("/addlist", async (req, res) => {
 // **make a member and add the id to board
 router.post("/member/add", async (req, res) => {
   const { userId, memberUsername, memberEmail, boardId } = req.body;
+  console.log("userId:", userId, "memberUsername:", memberUsername, "memberEmail:", memberEmail, "boardId:", boardId);
   if (!userId || (!memberUsername && !memberEmail) || !boardId) return res.status(400).send("Required fields missing");
 
   const foundBoard = await BoardModel.findById(boardId);
   if (!foundBoard) return res.status(400).send("Board not found");
-  if (foundBoard.admin.toString() !== userId) return res.status(401).send("Current user is not admin");
+  if (foundBoard.admin.toString() !== userId) return res.status(400).send("Current user is not admin");
 
   const foundUser = memberUsername
     ? await UserModel.findOne({ username: memberUsername })
     : memberEmail
     ? await UserModel.findOne({ email: memberEmail })
     : null;
-  if (!foundUser) return res.status(400).send("User not found");
+  if (!foundUser) return res.status(404).send("User not found");
+
+  let isMember;
+  for (const member of foundBoard.members) {
+    if (member._id === foundUser._id) isMember = true;
+  }
+  if (!isMember) return res.status(404).send("User is not a member");
 
   try {
     const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $addToSet: { members: foundUser._id } });
@@ -126,7 +133,7 @@ router.post("/member/del", async (req, res) => {
 
   const foundBoard = await BoardModel.findById(boardId);
   if (!foundBoard) return res.status(400).send("Board not found");
-  if (foundBoard.admin.toString() !== userId) return res.status(401).send("Current user is not admin");
+  if (foundBoard.admin.toString() !== userId) return res.status(400).send("Current user is not admin");
 
   const foundUser = memberUsername
     ? await UserModel.findOne({ username: memberUsername })
@@ -134,6 +141,12 @@ router.post("/member/del", async (req, res) => {
     ? await UserModel.findOne({ email: memberEmail })
     : null;
   if (!foundUser) return res.status(400).send("User not found");
+
+  let isMember;
+  for (const member of foundBoard.members) {
+    if (member._id === foundUser._id) isMember = true;
+  }
+  if (!isMember) return res.status(404).send("User is not a member");
 
   try {
     const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $pull: { members: foundUser._id } });
@@ -151,7 +164,7 @@ router.post("/visibility", async (req, res) => {
 
   const foundBoard = await BoardModel.findById(boardId);
   if (!foundBoard) return res.status(400).send("Board not found");
-  if (foundBoard.admin.toString() !== userId) return res.status(401).send("Current user is not admin");
+  if (foundBoard.admin.toString() !== userId) return res.status(400).send("Current user is not admin");
 
   // foundBoard.active = foundBoard.active ? false : true;
 
@@ -171,7 +184,7 @@ router.post("/edit", async (req, res) => {
 
   const foundBoard = await BoardModel.findById(boardId);
   if (!foundBoard) return res.status(400).send("Board not found");
-  if (foundBoard.admin.toString() !== userId) return res.status(401).send("Current user is not admin");
+  if (foundBoard.admin.toString() !== userId) return res.status(400).send("Current user is not admin");
 
   if (title) foundBoard.title = title;
   if (desc) foundBoard.desc = desc;

@@ -24,9 +24,9 @@ router.post("/create", async (req, res) => {
 
   const foundBoard = await BoardModel.findById(boardId);
   if (!foundBoard) return res.status(400).send("Board not found");
-  if (!foundBoard.members.includes(userId)) return res.status(401).send("Current user is not board member");
+  if (!foundBoard.members.includes(userId)) return res.status(404).send("Current user is not board member");
 
-  if (!foundBoard.lists.includes(listId)) return res.status(401).send("List does not exist in board");
+  if (!foundBoard.lists.includes(listId)) return res.status(404).send("List does not exist in board");
 
   let newCard = new CardModel({
     title: title,
@@ -39,7 +39,7 @@ router.post("/create", async (req, res) => {
     console.log(savedCard);
     try {
       const foundList = await ListModel.findById(listId);
-      if (!foundList) return res.status(401).send("List does not exist");
+      if (!foundList) return res.status(404).send("List does not exist");
       foundList.cards.push(savedCard._id);
       const savedBoard = foundList.save();
       return res.status(200).send("Card created successfully");
@@ -58,7 +58,7 @@ router.post("/move", async (req, res) => {
 
   const foundCard = await CardModel.findById(cardId).populate("board");
   if (!foundCard) return res.status(400).send("Card not found");
-  if (!foundCard.board.members.includes(userId)) return res.status(401).send("Current user is not board member");
+  if (!foundCard.board.members.includes(userId)) return res.status(404).send("Current user is not board member");
 
   try {
     const updatedList_From = await ListModel.findOneAndUpdate({ _id: currListId }, { $pull: { cards: cardId } });
@@ -85,7 +85,7 @@ router.post("/edit", async (req, res) => {
 
   let foundCard = await CardModel.findById(cardId).populate("board");
   if (!foundCard) return res.status(400).send("Card not found");
-  if (!foundCard.board.members.includes(userId)) return res.status(401).send("Current user is not board member");
+  if (!foundCard.board.members.includes(userId)) return res.status(404).send("Current user is not board member");
 
   if (title) foundCard.title = title;
   if (desc) foundCard.description = desc;
@@ -127,7 +127,7 @@ router.post("/comment/add", async (req, res) => {
 
   let foundCard = await CardModel.findById(cardId).populate("board");
   if (!foundCard) return res.status(400).send("Card not found");
-  if (!foundCard.board.members.includes(userId)) return res.status(401).send("Current user is not board member");
+  if (!foundCard.board.members.includes(userId)) return res.status(404).send("Current user is not board member");
 
   const newComment = new CommentModel({
     comment,
@@ -152,12 +152,12 @@ router.post("/comment/edit", async (req, res) => {
 
   let foundCard = await CardModel.findById(cardId).populate("board").populate("comments");
   if (!foundCard) return res.status(400).send("Card not found");
-  if (!foundCard.board.members.includes(userId)) return res.status(401).send("Current user is not board member");
+  if (!foundCard.board.members.includes(userId)) return res.status(404).send("Current user is not board member");
 
   let found = false;
   for (const commentObj of foundCard.comments) {
     if (commentObj._id.toString() === commentId && commentObj.poster.toString() !== userId) {
-      return res.status(401).send("User is not original poster");
+      return res.status(400).send("User is not original poster");
     }
     if (commentObj._id.toString() === commentId) found = true;
   }
@@ -180,12 +180,12 @@ router.delete("/comment/del", async (req, res) => {
 
   let foundCard = await CardModel.findById(cardId).populate("board").populate("comments");
   if (!foundCard) return res.status(400).send("Card not found");
-  if (!foundCard.board.members.includes(userId)) return res.status(401).send("Current user is not board member");
+  if (!foundCard.board.members.includes(userId)) return res.status(404).send("Current user is not board member");
 
   let found = false;
   for (const commentObj of foundCard.comments) {
     if (commentObj._id.toString() === commentId && commentObj.poster.toString() !== userId) {
-      return res.status(401).send("User is not original poster");
+      return res.status(400).send("User is not original poster");
     }
     if (commentObj._id.toString() === commentId) found = true;
   }

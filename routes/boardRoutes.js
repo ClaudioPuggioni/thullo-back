@@ -114,13 +114,14 @@ router.post("/member/add", async (req, res) => {
 
   let isMember;
   for (const member of foundBoard.members) {
-    if (member._id === foundUser._id) isMember = true;
+    if (member._id.toString() === foundUser._id.toString()) isMember = true;
+    console.log(member._id.toString(), foundUser._id.toString());
   }
-  if (!isMember) return res.status(404).send("User is not a member");
+  if (isMember) return res.status(404).send("User is already a member");
 
   try {
     const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $addToSet: { members: foundUser._id } });
-    return res.status(200).send("Member added successfully to board");
+    return res.status(200).send({ msg: "Member added successfully to board", member: foundUser });
   } catch (err) {
     return res.status(501).send(err.message);
   }
@@ -142,16 +143,17 @@ router.post("/member/del", async (req, res) => {
       ? await UserModel.findOne({ email: memberEmail })
       : null;
   if (!foundUser) return res.status(400).send("User not found");
+  if (foundUser._id.toString() === userId) return res.status(400).send("Cannot remove admin");
 
   let isMember;
   for (const member of foundBoard.members) {
-    if (member._id === foundUser._id) isMember = true;
+    if (member._id.toString() === foundUser._id.toString()) isMember = true;
   }
   if (!isMember) return res.status(404).send("User is not a member");
 
   try {
     const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $pull: { members: foundUser._id } });
-    return res.status(200).send("Member removed successfully");
+    return res.status(200).send({ msg: "Member removed successfully", member: foundUser });
   } catch (err) {
     return res.status(501).send(err.message);
   }
@@ -161,17 +163,18 @@ router.post("/member/del", async (req, res) => {
 //** */ Get the board and admin id check admin and  toggle the boolean
 router.post("/visibility", async (req, res) => {
   const { boardId, userId, bool } = req.body;
-  if ((!boardId, !userId, !bool)) return res.status(400).send("Required fields missing");
+  // console.log("boardId:", boardId, "userId:", userId, "bool:", bool);
+  if (!boardId || !userId || !bool) return res.status(400).send("Required fields missing");
 
   const foundBoard = await BoardModel.findById(boardId);
   if (!foundBoard) return res.status(400).send("Board not found");
   if (foundBoard.admin.toString() !== userId) return res.status(400).send("Current user is not admin");
 
-  // foundBoard.active = foundBoard.active ? false : true;
+  const newActive = bool === "true" ? true : false;
 
   try {
     // const savedBoard = await foundBoard.save();
-    const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { active: bool });
+    const updatedBoard = await BoardModel.findOneAndUpdate({ _id: boardId }, { $set: { active: newActive } });
     return res.status(200).send("Board visibility updated successfully");
   } catch (err) {
     return res.status(501).send(err.message);
